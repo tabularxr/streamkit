@@ -1,8 +1,10 @@
 import Foundation
-import StreamKit
+import SwiftUI
 import ARKit
+import StreamKit
 import Combine
 
+@available(iOS 16.0, visionOS 1.0, *)
 @MainActor
 class StreamManager: NSObject, ObservableObject {
     // MARK: - Published Properties
@@ -12,6 +14,7 @@ class StreamManager: NSObject, ObservableObject {
     @Published var connectionStatus = ConnectionStatus.disconnected
     @Published var isARKitSupported = false
     @Published var meshBufferStatus: String = "Empty"
+    @Published var lastError: Error?
     
     // MARK: - Private Properties
     private var streamKit: StreamKit?
@@ -38,7 +41,7 @@ class StreamManager: NSObject, ObservableObject {
     }
     
     // MARK: - Public Methods
-    func configure(with config: AppConfiguration) {
+    func configure(with config: DemoConfiguration) {
         guard !config.relayURL.isEmpty && !config.apiKey.isEmpty else {
             addLog(.error, "Configuration incomplete: Missing Relay URL or API Key")
             return
@@ -78,10 +81,12 @@ class StreamManager: NSObject, ObservableObject {
             totalDataSent = 0
             compressionRatios.removeAll()
             errorCount = 0
+            lastError = nil
             
             addLog(.info, "Starting streaming session...")
         } catch {
             sessionState = .error(error.localizedDescription)
+            lastError = error
             addLog(.error, "Failed to start streaming: \(error.localizedDescription)")
         }
     }
@@ -90,6 +95,7 @@ class StreamManager: NSObject, ObservableObject {
         streamKit?.stopStreaming()
         sessionState = .idle
         startTime = nil
+        lastError = nil
         
         addLog(.info, "Streaming session stopped")
         logSessionSummary()
@@ -250,6 +256,7 @@ extension StreamManager: StreamKitDelegate {
         )
         
         if let error = error {
+            lastError = error
             addLog(.network, "Disconnected from server", details: error.localizedDescription)
         } else {
             addLog(.network, "Disconnected from server")
@@ -280,6 +287,7 @@ extension StreamManager: StreamKitDelegate {
     
     func streamKit(_ streamKit: StreamKit, didEncounterError error: StreamKitError) {
         errorCount += 1
+        lastError = error
         
         switch error {
         case .alreadyStreaming:
@@ -315,6 +323,125 @@ extension StreamManager: StreamKitDelegate {
         formatter.countStyle = .binary
         return formatter.string(fromByteCount: Int64(bytes))
     }
+}
+
+// MARK: - Data Models
+struct StreamMetrics {
+    let fps: Double
+    let packetsSent: Int
+    let compressionRatio: Double
+    let bandwidth: Double
+    let sessionID: String?
+    let uptime: TimeInterval
+    let errorCount: Int
+    
+    static let empty = StreamMetrics(
+        fps: 0,
+        packetsSent: 0,
+        compressionRatio: 0,
+        bandwidth: 0,
+        sessionID: nil,
+        uptime: 0,
+        errorCount: 0
+    )
+}
+
+struct LogEntry: Identifiable, Equatable {
+    let id = UUID()
+    let timestamp: Date
+    let type: LogType
+    let message: String
+    let details: String?
+    
+    enum LogType: String, CaseIterable {
+        case pose = "Pose"
+        case mesh = "Mesh"
+        case error = "Error"
+        case info = "Info"
+        case warning = "Warning"
+        case network = "Network"
+        case compression = "Compression"
+        
+        var color: String {
+            switch self {
+            case .pose: return "blue"
+            case .mesh: return "green"
+            case .error: return "red"
+            case .info: return "gray"
+            case .warning: return "orange"
+            case .network: return "purple"
+            case .compression: return "cyan"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .pose: return "location.fill"
+            case .mesh: return "cube.fill"
+            case .error: return "exclamationmark.triangle.fill"
+            case .info: return "info.circle.fill"
+            case .warning: return "exclamationmark.circle.fill"
+            case .network: return "network"
+            case .compression: return "archivebox.fill"
+            }
+        }
+    }
+}
+
+enum SessionState {
+    case idle
+    case connecting
+    case streaming
+    case paused
+    case disconnected
+    case error(String)
+    
+    var displayText: String {
+        switch self {
+        case .idle: return "Ready to start"
+        case .connecting: return "Connecting..."
+        case .streaming: return "Streaming"
+        case .paused: return "Paused"
+        case .disconnected: return "Disconnected"
+        case .error(let message): return "Error: \(message)"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .idle: return "gray"
+        case .connecting: return "yellow"
+        case .streaming: return "green"
+        case .paused: return "orange"
+        case .disconnected: return "red"
+        case .error: return "red"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .idle: return "play.circle"
+        case .connecting: return "dot.radiowaves.left.and.right"
+        case .streaming: return "record.circle"
+        case .paused: return "pause.circle"
+        case .disconnected: return "wifi.slash"
+        case .error: return "exclamationmark.triangle"
+        }
+    }
+}
+
+struct ConnectionStatus {
+    let isConnected: Bool
+    let lastConnected: Date?
+    let reconnectAttempts: Int
+    let latency: TimeInterval?
+    
+    static let disconnected = ConnectionStatus(
+        isConnected: false,
+        lastConnected: nil,
+        reconnectAttempts: 0,
+        latency: nil
+    )
 }
 
 // MARK: - StreamKit Extensions
