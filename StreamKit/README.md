@@ -20,19 +20,20 @@ StreamKit is the iOS SDK for capturing and streaming spatial data (poses + LiDAR
 
 ## Installation
 
-### Swift Package Manager
+### Local Package Integration
 
-Add StreamKit to your project via Xcode:
+Add StreamKit as a local package to your project:
 
 1. File → Add Package Dependencies
-2. Enter: `https://github.com/tabular/streamkit`
-3. Select version and add to target
+2. Choose "Add Local..."
+3. Navigate to the StreamKit folder
+4. Add to your target
 
 ### Manual Integration
 
-1. Clone this repository
-2. Drag `StreamKit.xcodeproj` into your Xcode project
-3. Add StreamKit as a dependency to your target
+1. Drag the StreamKit folder into your Xcode project
+2. Add StreamKit as a dependency to your target
+3. Ensure all required dependencies (Starscream, SwiftProtobuf) are resolved
 
 ## Quick Start
 
@@ -183,28 +184,28 @@ func streamKit(_ streamKit: StreamKit, didEncounterError error: StreamKitError) 
 
 ## Testing
 
-Run the test suite:
-
-```bash
-./run_tests.sh
-```
-
 ### Unit Tests
-- 90%+ code coverage
-- Mock ARKit components for CI/CD
 - Comprehensive error scenario testing
+- Mock ARKit components for isolated testing
+- Package dependency verification
 
 ### Integration Tests
 - Real device testing required for ARKit
 - Network resilience testing
 - Performance benchmarking
 
-### Demo Application
-A complete demo app is included in the `Demo/` directory:
+### Demo Applications
+Complete demo apps are included in the `examples/` directory:
 
-1. Open `Demo/StreamKitDemo.xcodeproj`
+#### iOSSocket Demo
+1. Open `examples/iOSSocket/iOSSocket.xcodeproj`
 2. Run on a physical device with LiDAR
 3. Test streaming to a local Relay server
+
+#### StreamKitDemo
+1. Open `examples/StreamKitDemo/StreamKitDemo.xcodeproj` 
+2. Alternative demo implementation
+3. Basic StreamKit integration example
 
 ## Architecture
 
@@ -248,18 +249,11 @@ print("StreamKit Debug: \\(message)")
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+1. Create a feature branch
+2. Add tests for new functionality
+3. Ensure all tests pass
+4. Submit a pull request
 
 ## License
 
 StreamKit is part of the Tabular platform. See LICENSE file for details.
-
-## Support
-
-- Documentation: [docs.tabularxr.com](https://docs.tabularxr.com)
-- Issues: [GitHub Issues](https://github.com/tabular/streamkit/issues)
-- Discord: [Tabular Community](https://discord.gg/tabular)
