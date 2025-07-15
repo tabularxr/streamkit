@@ -8,18 +8,18 @@ class ARSessionManager: NSObject {
     
     weak var delegate: ARSessionManagerDelegate?
     
-    private let arSession: ARSession
-    private var frameNumber: Int = 0
-    private var isSessionRunning = false
+    internal let arSession: ARSession
+    internal var frameNumber: Int = 0
+    internal var isSessionRunning = false
     
     // Frame rate control
-    private var lastPoseTime: TimeInterval = 0
-    private let poseFrameInterval: TimeInterval = 1.0 / 30.0 // 30 FPS
+    internal var lastPoseTime: TimeInterval = 0
+    internal let poseFrameInterval: TimeInterval = 1.0 / 30.0 // 30 FPS
     
     // Mesh batching
-    private var meshBuffer: [MeshData] = []
-    private var lastMeshFlush: TimeInterval = 0
-    private let meshFlushInterval: TimeInterval = 0.1 // 100ms
+    internal var meshBuffer: [MeshData] = []
+    internal var lastMeshFlush: TimeInterval = 0
+    internal let meshFlushInterval: TimeInterval = 0.1 // 100ms
     
     // MARK: - Initialization
     
@@ -80,17 +80,17 @@ class ARSessionManager: NSObject {
         isSessionRunning = true
     }
     
-    // MARK: - Private Methods
+    // MARK: - Internal Methods
     
-    private func shouldSendPose(at timestamp: TimeInterval) -> Bool {
+    internal func shouldSendPose(at timestamp: TimeInterval) -> Bool {
         return timestamp - lastPoseTime >= poseFrameInterval
     }
     
-    private func shouldFlushMeshes(at timestamp: TimeInterval) -> Bool {
+    internal func shouldFlushMeshes(at timestamp: TimeInterval) -> Bool {
         return timestamp - lastMeshFlush >= meshFlushInterval && !meshBuffer.isEmpty
     }
     
-    private func flushMeshBuffer() {
+    internal func flushMeshBuffer() {
         let timestamp = Date().timeIntervalSince1970
         
         for meshData in meshBuffer {

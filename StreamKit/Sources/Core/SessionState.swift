@@ -25,7 +25,7 @@ class SessionState {
         startTime = Date()
     }
     
-    func setSessionID(_ newSessionID: String) {
+    internal func setSessionID(_ newSessionID: String) {
         lock.lock()
         defer { lock.unlock() }
         
@@ -37,14 +37,14 @@ class SessionState {
     
     // MARK: - Counters
     
-    func incrementFramesSent() {
+    internal func incrementFramesSent() {
         lock.lock()
         defer { lock.unlock() }
         
         framesSent += 1
     }
     
-    func incrementMeshesSent() {
+    internal func incrementMeshesSent() {
         lock.lock()
         defer { lock.unlock() }
         

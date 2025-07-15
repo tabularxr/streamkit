@@ -37,7 +37,7 @@ public class StreamKit: NSObject {
     private let streamingClient: StreamingClient
     private let compressionEngine: CompressionEngine
     private let packetBuilder: PacketBuilder
-    private let sessionState: SessionState
+    internal let sessionState: SessionState
     
     private var isStreaming = false
     private var isPaused = false
@@ -169,7 +169,7 @@ extension StreamKit: ARSessionManagerDelegate {
 
 extension StreamKit: StreamingClientDelegate {
     func streamingClient(_ client: StreamingClient, didConnect sessionID: String) {
-        sessionState.sessionID = sessionID
+        sessionState.setSessionID(sessionID)
         delegate?.streamKit(self, didConnect: sessionID)
     }
     

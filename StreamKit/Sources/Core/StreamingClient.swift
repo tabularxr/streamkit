@@ -1,7 +1,7 @@
 import Foundation
 import Starscream
 
-class StreamingClient: NSObject {
+class StreamingClient: NSObject, WebSocketDelegate {
     
     // MARK: - Properties
     
@@ -145,13 +145,10 @@ class StreamingClient: NSObject {
             self?.connect()
         }
     }
-}
-
-// MARK: - WebSocketDelegate
-
-extension StreamingClient: WebSocketDelegate {
     
-    func didReceive(event: WebSocketEvent, client: WebSocket) {
+    // MARK: - WebSocketDelegate
+    
+    func didReceive(event: WebSocketEvent, client: WebSocketClient) {
         switch event {
         case .connected(let headers):
             print("StreamingClient: Connected with headers: \(headers)")
@@ -217,6 +214,12 @@ extension StreamingClient: WebSocketDelegate {
                 delegate?.streamingClient(self, didEncounterError: error)
             }
             
+            scheduleReconnection()
+            
+        case .peerClosed:
+            print("StreamingClient: Peer closed connection")
+            updateConnectionState(.disconnected)
+            delegate?.streamingClient(self, didDisconnect: nil)
             scheduleReconnection()
         }
     }

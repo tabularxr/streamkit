@@ -13,7 +13,7 @@ let package = Package(
             targets: ["StreamKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/daltoniam/Starscream.git", from: "4.0.6"),
+        .package(url: "https://github.com/daltoniam/Starscream.git", from: "4.0.8"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.2")
     ],
     targets: [

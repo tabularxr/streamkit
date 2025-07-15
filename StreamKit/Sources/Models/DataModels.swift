@@ -49,6 +49,38 @@ struct PoseData: Codable {
         self.rotation = simd_quatf(transform)
         self.timestamp = timestamp
     }
+    
+    // MARK: - Codable Implementation
+    
+    private enum CodingKeys: String, CodingKey {
+        case position, rotation, timestamp
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        let positionArray = try container.decode([Float].self, forKey: .position)
+        guard positionArray.count == 3 else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Position array must have 3 elements"))
+        }
+        self.position = SIMD3<Float>(positionArray[0], positionArray[1], positionArray[2])
+        
+        let rotationArray = try container.decode([Float].self, forKey: .rotation)
+        guard rotationArray.count == 4 else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Rotation array must have 4 elements"))
+        }
+        self.rotation = simd_quatf(ix: rotationArray[0], iy: rotationArray[1], iz: rotationArray[2], r: rotationArray[3])
+        
+        self.timestamp = try container.decode(TimeInterval.self, forKey: .timestamp)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode([position.x, position.y, position.z], forKey: .position)
+        try container.encode([rotation.vector.x, rotation.vector.y, rotation.vector.z, rotation.vector.w], forKey: .rotation)
+        try container.encode(timestamp, forKey: .timestamp)
+    }
 }
 
 struct MeshData {
@@ -76,7 +108,8 @@ struct MeshData {
         self.faces = Array(UnsafeBufferPointer(start: facePointer, count: faceCount))
         
         // Extract normals
-        if let normalBuffer = geometry.normals {
+        let normalBuffer = geometry.normals
+        if normalBuffer.count > 0 {
             let normalPointer = normalBuffer.buffer.contents().assumingMemoryBound(to: SIMD3<Float>.self)
             self.normals = Array(UnsafeBufferPointer(start: normalPointer, count: normalBuffer.count))
         } else {

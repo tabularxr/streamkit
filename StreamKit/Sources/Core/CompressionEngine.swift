@@ -76,15 +76,15 @@ class CompressionEngine {
     }
     
     private func compressData(_ data: Data) throws -> Data {
-        let algorithm: Algorithm
+        let algorithm: compression_algorithm
         
         switch compressionLevel {
         case .low:
-            algorithm = .lz4
+            algorithm = COMPRESSION_LZ4
         case .medium:
-            algorithm = .lzfse
+            algorithm = COMPRESSION_LZFSE
         case .high:
-            algorithm = .lzma
+            algorithm = COMPRESSION_LZMA
         }
         
         guard let compressedData = try data.compressed(using: algorithm) else {
@@ -130,7 +130,7 @@ class CompressionEngine {
 // MARK: - Data Compression Extension
 
 private extension Data {
-    func compressed(using algorithm: Algorithm) throws -> Data? {
+    func compressed(using algorithm: compression_algorithm) throws -> Data? {
         return try self.withUnsafeBytes { rawBytes in
             let buffer = rawBytes.bindMemory(to: UInt8.self)
             let compressedData = NSMutableData()
