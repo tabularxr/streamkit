@@ -13,7 +13,8 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            ScrollView {
+                VStack(spacing: 20) {
                 // Header
                 VStack {
                     Text("StreamKit Demo")
@@ -100,8 +101,6 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
                 
-                Spacer()
-                
                 // Control Buttons
                 VStack(spacing: 12) {
                     Button(action: {
@@ -146,7 +145,9 @@ struct ContentView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.bottom)
+                .padding(.bottom, 30)
+                }
+                .padding(.horizontal, 16)
             }
         }
         .onAppear {

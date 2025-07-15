@@ -101,33 +101,37 @@ class StreamKitDemoViewModel: ObservableObject {
         
         do {
             try streamKit?.startStreaming()
-            isStreaming = true
-            isPaused = false
+            // Don't set isStreaming here - wait for didStartStreaming delegate
+            connectionStatus = "Connecting..."
             startTime = Date()
             resetMetrics()
-            
-            // Real StreamKit will handle metrics automatically
             
         } catch {
             print("Failed to start streaming: \(error)")
             connectionStatus = "Error: \(error.localizedDescription)"
+            isStreaming = false
+            isPaused = false
         }
     }
     
     func stopStreaming() {
+        guard isStreaming else { return }
+        
         streamKit?.stopStreaming()
-        isStreaming = false
-        isPaused = false
-        startTime = nil
-        // Real StreamKit handles cleanup automatically
+        // Don't set state here - wait for delegate callback
+        // The didStopStreaming delegate will update the state
     }
     
     func pauseStreaming() {
+        guard isStreaming && !isPaused else { return }
+        
         streamKit?.pauseStreaming()
         isPaused = true
     }
     
     func resumeStreaming() {
+        guard isStreaming && isPaused else { return }
+        
         streamKit?.resumeStreaming()
         isPaused = false
     }
@@ -214,6 +218,9 @@ extension StreamKitDemoViewModel: StreamKitDelegate {
     func streamKit(_ streamKit: StreamKit, didDisconnect error: Error?) {
         connectionStatus = "Disconnected"
         self.sessionID = nil
+        isStreaming = false
+        isPaused = false
+        startTime = nil
         
         if let error = error {
             print("StreamKit disconnected with error: \(error)")
@@ -224,11 +231,16 @@ extension StreamKitDemoViewModel: StreamKitDelegate {
     
     func streamKit(_ streamKit: StreamKit, didStartStreaming sessionID: String) {
         connectionStatus = "Streaming"
+        isStreaming = true
+        isPaused = false
         print("StreamKit started streaming")
     }
     
     func streamKit(_ streamKit: StreamKit, didStopStreaming sessionID: String) {
         connectionStatus = "Connected"
+        isStreaming = false
+        isPaused = false
+        startTime = nil
         print("StreamKit stopped streaming")
     }
     
@@ -241,9 +253,10 @@ extension StreamKitDemoViewModel: StreamKitDelegate {
     }
     
     func streamKit(_ streamKit: StreamKit, didSendFrame frameNumber: Int) {
-        // Frame count is handled by SessionMetrics
-        // Estimate data sent (for bandwidth calculation)
-        totalDataSent += Int.random(in: 1024...4096) // 1-4KB per frame
+        // Frame count and data metrics are handled by SessionMetrics
+        // Update total data sent from actual StreamKit metrics
+        let metrics = streamKit.sessionMetrics
+        totalDataSent = metrics.framesSent * 2048 // Estimate based on frame count
     }
     
     func streamKit(_ streamKit: StreamKit, didEncounterError error: StreamKitError) {
